@@ -1,0 +1,94 @@
+---
+- name: acme-air automation
+  hosts: local
+  gather_facts: true
+
+  collections:
+    - containers.podman
+
+  tasks:
+
+  - name: Install required packages
+    dnf:
+      name: 
+      - podman
+      - java-1.8.0-openjdk
+      - git
+      state: latest
+
+  - name: Download Maven
+    get_url: 
+      url: https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
+      dest: /tmp/apache-maven-3.6.3-bin.tar.gz
+
+  - name: Exctract Maven Tar
+    unarchive:
+      src: /tmp/apache-maven-3.6.3-bin.tar.gz
+      dest: /opt/
+
+  - name: Create a symbolic link to have more control over Maven versions and updates
+    file:
+      src: /opt/apache-maven-3.6.3
+      dest: /opt/maven
+      state: link
+
+  - name: Create maven.sh
+    file:
+      path: /etc/profile.d/maven.sh
+      state: touch
+      owner: root
+      group: root
+      mode: '0755'
+
+  - name: Add additional lines to a file
+    blockinfile:
+      path: /etc/profile.d/maven.sh
+      block: |
+        export JAVA_HOME=/usr/lib/jvm/jre-openjdk
+        export M2_HOME=/opt/maven
+        export MAVEN_HOME=/opt/maven
+        export PATH=${M2_HOME}/bin:${PATH}
+      state: present
+
+  - name: Clean artifact path
+    file:
+      state: absent
+      path: "{{ project_folder }}"
+
+  - name: Create a directory if it does not exist
+    file:
+      path: "{{ project_folder }}"
+      state: directory
+      mode: '0755'
+
+  - name: Checkout "acme-air microservices" from github
+    git:
+      repo: "{{ item.github_repository }}"
+      dest: "{{ item.directory_path }}"
+    loop:
+      "{{ microservices }}"
+
+  - name: Maven build "acme-air microservices"
+    command: mvn clean package
+    args:
+      chdir: "{{ item.directory_path }}"
+    loop:
+      "{{ microservices }}"
+
+
+  - name: Build & Push images
+    podman_image:
+      name: "{{ item.name }}"
+      path: "{{ item.directory_path }}"
+      tag: "{{ ansible_machine }}"
+      build:
+        format: docker
+      push: yes
+      username: "{{ container_registry_username }}" 
+      password: "{{ container_registry_password }}"
+    loop:
+      "{{ microservices }}"
+    register: result
+    until: result is not failed
+    retries: 5
+...

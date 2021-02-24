@@ -1,0 +1,29 @@
+# environment_vars:
+#   my_environment_var: my_var
+
+container_repository_url: docker.io
+container_registry_username: yigitpolat
+container_registry_password: "{{ container_registry_password }}"
+
+project_folder: /root/acme-air
+
+microservices:
+  - name: "{{ container_repository_url }}/{{ container_registry_username }}/acmeair-mainservice-java"
+    github_repository: "https://github.com/yigitpolat/acmeair-mainservice-java.git"
+    directory_path: "{{ project_folder }}/acmeair-mainservice-java"
+
+  - name: "{{ container_repository_url }}/{{ container_registry_username }}/acmeair-authservice-java"
+    github_repository: "https://github.com/yigitpolat/acmeair-authservice-java.git"
+    directory_path: "{{ project_folder }}/acmeair-authservice-java"
+
+  - name: "{{ container_repository_url }}/{{ container_registry_username }}/acmeair-customerservice-java"
+    github_repository: "https://github.com/yigitpolat/acmeair-customerservice-java.git"
+    directory_path: "{{ project_folder }}/acmeair-customerservice-java"
+
+  - name: "{{ container_repository_url }}/{{ container_registry_username }}/acmeair-flightservice-java"
+    github_repository: "https://github.com/yigitpolat/acmeair-flightservice-java.git"
+    directory_path: "{{ project_folder }}/acmeair-flightservice-java"
+
+  - name: "{{ container_repository_url }}/{{ container_registry_username }}/acmeair-bookingservice-java"
+    github_repository: "https://github.com/yigitpolat/acmeair-bookingservice-java.git"
+    directory_path: "{{ project_folder }}/acmeair-bookingservice-java"

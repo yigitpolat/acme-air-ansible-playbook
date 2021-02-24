@@ -1,0 +1,16 @@
+[local]
+127.0.0.1 ansible_connection=local
+
+[s390x_rhel]
+148.100.78.207
+
+[x86_rhel]
+169.50.12.56
+
+[ppc_rhel]
+172.16.28.170
+
+[remote_hosts:children]
+s390x_rhel
+x86_rhel
+ppc_rhel
