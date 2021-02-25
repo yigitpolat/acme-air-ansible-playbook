@@ -1,10 +1,16 @@
-# environment_vars:
-#   my_environment_var: my_var
+# Maven 
+maven_major: 3
+maven_version: 3.6.3
+maven_home_parent_directory: "/opt"
+maven_env_file: "/etc/profile.d/maven.sh"
 
+# Container Registry
 container_repository_url: docker.io
 container_registry_username: yigitpolat
 container_registry_password: "{{ container_registry_password }}"
 
+
+# Acme Air
 project_folder: /root/acme-air
 
 microservices:

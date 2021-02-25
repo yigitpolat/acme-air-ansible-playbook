@@ -17,7 +17,9 @@ ssh-copy-id -i ~/.ssh/id_rsa.pub root@172.16.28.170
 ansible-galaxy collection install -r requirements.yml
 
 # Create container registry secret
-ansible-vault create
+ansible-vault create group_vars/all/vault
+
+# container_registry_password: xxx
 
 # Check if everything works fine.
 ansible-playbook playbook.yml --syntax-check

@@ -1,5 +1,5 @@
 ---
-- name: acme-air automation
+- name: Acme-Air Container Image Build
   hosts: local
   gather_facts: true
 
@@ -8,54 +8,51 @@
 
   tasks:
 
-  - name: Install required packages
+  - name: Install Java, Git, Podman
     dnf:
       name: 
       - podman
       - java-1.8.0-openjdk
+      - java-1.8.0-openjdk-headless
+      - java-1.8.0-openjdk-devel
       - git
       state: latest
 
-  - name: Download Maven
-    get_url: 
-      url: https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
-      dest: /tmp/apache-maven-3.6.3-bin.tar.gz
-
-  - name: Exctract Maven Tar
+  - name: Download and Unarchive Maven
     unarchive:
-      src: /tmp/apache-maven-3.6.3-bin.tar.gz
-      dest: /opt/
+      src: "https://downloads.apache.org/maven/maven-{{ maven_major }}/{{ maven_version }}/binaries/apache-maven-{{ maven_version }}-bin.tar.gz"
+      dest: "{{ maven_home_parent_directory }}"
+      remote_src: yes
 
   - name: Create a symbolic link to have more control over Maven versions and updates
     file:
-      src: /opt/apache-maven-3.6.3
-      dest: /opt/maven
+      src: "{{ maven_home_parent_directory }}/apache-maven-{{maven_version}}/bin/mvn"
+      dest: "/usr/bin/mvn"
       state: link
 
-  - name: Create maven.sh
-    file:
-      path: /etc/profile.d/maven.sh
-      state: touch
+  - name: Configure the environment for Apache Maven
+    blockinfile:
+      path: "{{ maven_env_file }}"
+      create: yes
+      state: present
       owner: root
       group: root
       mode: '0755'
-
-  - name: Add additional lines to a file
-    blockinfile:
-      path: /etc/profile.d/maven.sh
       block: |
         export JAVA_HOME=/usr/lib/jvm/jre-openjdk
-        export M2_HOME=/opt/maven
-        export MAVEN_HOME=/opt/maven
-        export PATH=${M2_HOME}/bin:${PATH}
-      state: present
+        export M2_HOME={{ maven_home_parent_directory }}/apache-maven-{{ maven_version }}
+        export MAVEN_HOME={{ maven_home_parent_directory }}/apache-maven-{{ maven_version }}
+        export PATH=$PATH:$M2_HOME/bin
 
-  - name: Clean artifact path
+  - name: Load the environment for Apache Maven
+    shell: "source {{ maven_env_file }}"
+
+  - name: Clean acme-air directory if exists
     file:
       state: absent
       path: "{{ project_folder }}"
 
-  - name: Create a directory if it does not exist
+  - name: Create acme-air directory
     file:
       path: "{{ project_folder }}"
       state: directory
@@ -74,7 +71,6 @@
       chdir: "{{ item.directory_path }}"
     loop:
       "{{ microservices }}"
-
 
   - name: Build & Push images
     podman_image:
